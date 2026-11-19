@@ -1,0 +1,8 @@
+
+--MIMEBoundary_urn_uuid_8BC3E3F9A6D1E2C4B5A61763548000001
+Content-Type: application/xop+xml; charset=UTF-8; type="application/soap+xml"
+Content-Transfer-Encoding: binary
+Content-ID: <0.urn:uuid:8BC3E3F9A6D1E2C4B5A61763548000002@apache.org>
+
+<?xml version='1.0' encoding='UTF-8'?><soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope"><soapenv:Header xmlns:wsa="http://www.w3.org/2005/08/addressing"><wsa:Action>urn:ihe:iti:2007:ProvideAndRegisterDocumentSet-bResponse</wsa:Action><wsa:RelatesTo>urn:uuid:9376254e-da05-41f5-9af3-ac56d63d8ebd</wsa:RelatesTo></soapenv:Header><soapenv:Body><rs:RegistryResponse xmlns:rs="urn:oasis:names:tc:ebxml-regrep:xsd:rs:3.0" status="urn:oasis:names:tc:ebxml-regrep:ResponseStatusType:Success"/></soapenv:Body></soapenv:Envelope>
+--MIMEBoundary_urn_uuid_8BC3E3F9A6D1E2C4B5A61763548000001--

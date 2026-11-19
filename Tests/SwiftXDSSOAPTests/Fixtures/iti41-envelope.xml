@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Shape of an ITI-41 request (ITI TF-2 §3.41, Appendix V); synthetic values, metadata abridged. -->
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing">
+  <s:Header>
+    <a:Action s:mustUnderstand="1">urn:ihe:iti:2007:ProvideAndRegisterDocumentSet-b</a:Action>
+    <a:MessageID>urn:uuid:9376254e-da05-41f5-9af3-ac56d63d8ebd</a:MessageID>
+    <a:ReplyTo>
+      <a:Address>http://www.w3.org/2005/08/addressing/anonymous</a:Address>
+    </a:ReplyTo>
+    <a:To s:mustUnderstand="1">https://repository.example.invalid/xds/iti41</a:To>
+  </s:Header>
+  <s:Body>
+    <xdsb:ProvideAndRegisterDocumentSetRequest xmlns:xdsb="urn:ihe:iti:xds-b:2007"
+        xmlns:lcm="urn:oasis:names:tc:ebxml-regrep:xsd:lcm:3.0"
+        xmlns:rim="urn:oasis:names:tc:ebxml-regrep:xsd:rim:3.0">
+      <lcm:SubmitObjectsRequest>
+        <rim:RegistryObjectList>
+          <rim:ExtrinsicObject id="Document01" mimeType="application/dicom"
+              objectType="urn:uuid:7edca82f-054d-47f2-a032-9b2a5b5186c1">
+            <rim:Slot name="creationTime">
+              <rim:ValueList><rim:Value>20261119101500</rim:Value></rim:ValueList>
+            </rim:Slot>
+            <rim:Name><rim:LocalizedString value="Manifeste d’examen &amp; images clés"/></rim:Name>
+          </rim:ExtrinsicObject>
+          <rim:RegistryPackage id="SubmissionSet01"/>
+          <rim:Association id="as01" associationType="urn:oasis:names:tc:ebxml-regrep:AssociationType:HasMember"
+              sourceObject="SubmissionSet01" targetObject="Document01"/>
+        </rim:RegistryObjectList>
+      </lcm:SubmitObjectsRequest>
+      <xdsb:Document id="Document01"><xop:Include xmlns:xop="http://www.w3.org/2004/08/xop/include" href="cid:1.urn%3Auuid%3Ab1a9c4f2@example.invalid"/></xdsb:Document>
+    </xdsb:ProvideAndRegisterDocumentSetRequest>
+  </s:Body>
+</s:Envelope>

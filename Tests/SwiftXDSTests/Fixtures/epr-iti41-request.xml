@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xds:ProvideAndRegisterDocumentSetRequest xmlns:rmd="urn:ihe:iti:rmd:2017"
+xmlns:lcm="urn:oasis:names:tc:ebxml-regrep:xsd:lcm:3.0"
+xmlns:query="urn:oasis:names:tc:ebxml-regrep:xsd:query:3.0"
+xmlns="urn:oasis:names:tc:ebxml-regrep:xsd:rim:3.0"
+xmlns:xds="urn:ihe:iti:xds-b:2007"
+xmlns:rs="urn:oasis:names:tc:ebxml-regrep:xsd:rs:3.0">
+    <lcm:SubmitObjectsRequest>
+     <rs:RequestSlotList/>
+     <RegistryObjectList>
+
+      <ExtrinsicObject mimeType="application/fhir+json" objectType="urn:uuid:7edca82f-054d-47f2-a032-9b2a5b5186c1" id="urn:uuid:af516d8d-c449-4a8b-bbb4-9e36489d474d">
+       <Slot name="creationTime">
+        <ValueList>
+         <Value>20231219102116</Value>
+        </ValueList>
+       </Slot>
+       <Slot name="languageCode">
+        <ValueList>
+         <Value>en</Value>
+        </ValueList>
+       </Slot>
+       <Slot name="sourcePatientId">
+        <ValueList>
+         <Value>CHPAM3946^^^&amp;1.3.6.1.4.1.12559.11.20.1&amp;ISO</Value>
+        </ValueList>
+       </Slot>
+       <Slot name="urn:e-health-suisse:2020:originalProviderRole">
+        <ValueList>
+         <Value>HCP^^^&amp;2.16.756.5.30.1.127.3.10.6&amp;ISO</Value>
+        </ValueList>
+       </Slot>
+       <Name>
+        <LocalizedString charset="UTF-8" value="Vaccination - FSME-Immun 0.25 ml Junior"/>
+       </Name>
+       <Classification classificationScheme="urn:uuid:93606bcf-9494-43ec-9b4e-a7748d1a838d" classifiedObject="urn:uuid:af516d8d-c449-4a8b-bbb4-9e36489d474d" nodeRepresentation="" id="urn:uuid:1012a5ae-21b8-41d4-895a-a14f6303d23a">
+        <Slot name="authorPerson">
+         <ValueList>
+          <Value>^Max^Mustermann^^^Dr.Med</Value>
+         </ValueList>
+        </Slot>
+        <Slot name="authorRole">
+         <ValueList>
+          <Value>HCP^^^&amp;2.16.756.5.30.1.127.3.10.6&amp;ISO</Value>
+         </ValueList>
+        </Slot>
+        <Slot name="authorSpecialty">
+         <ValueList>
+          <Value>1050^^^&amp;2.16.756.5.30.1.127.3.5&amp;ISO</Value>
+         </ValueList>
+        </Slot>
+       </Classification>
+       <Classification classificationScheme="urn:uuid:41a5887f-8865-4c09-adf7-e362475b143a" classifiedObject="urn:uuid:af516d8d-c449-4a8b-bbb4-9e36489d474d" nodeRepresentation="184216000" id="urn:uuid:98e9bd8c-6d85-4608-a158-792b41b35911">
+        <Slot name="codingScheme">
+         <ValueList>
+          <Value>2.16.840.1.113883.6.96</Value>
+         </ValueList>
+        </Slot>
+        <Name>
+         <LocalizedString charset="UTF-8" value="Patient record type (record artifact)"/>
+        </Name>
+       </Classification>
+       <Classification classificationScheme="urn:uuid:a09d5840-386c-46f2-b5ad-9c3699a4309d" classifiedObject="urn:uuid:af516d8d-c449-4a8b-bbb4-9e36489d474d" nodeRepresentation="urn:che:epr:ch-vacd:immunization-administration:2022" id="urn:uuid:d1ee8ef0-201d-4701-88d1-0178d53889c5">
+        <Slot name="codingScheme">
+         <ValueList>
+          <Value>2.16.756.5.30.1.127.3.10.10</Value>
+         </ValueList>
+        </Slot>
+        <Name>
+         <LocalizedString charset="UTF-8" value="CH VACD Immunization Administration"/>
+        </Name>
+       </Classification>
+       <Classification classificationScheme="urn:uuid:f33fb8ac-18af-42cc-ae0e-ed0b0bdb91e1" classifiedObject="urn:uuid:af516d8d-c449-4a8b-bbb4-9e36489d474d" nodeRepresentation="43741000" id="urn:uuid:108141b6-ea5f-44cc-934e-0452b237c779">
+        <Slot name="codingScheme">
+         <ValueList>
+          <Value>2.16.840.1.113883.6.96</Value>
+         </ValueList>
+        </Slot>
+        <Name>
+         <LocalizedString charset="UTF-8" value="Site of Care (environment)"/>
+        </Name>
+       </Classification>
+       <Classification classificationScheme="urn:uuid:cccf5598-8b07-4b77-a05e-ae952c785ead" classifiedObject="urn:uuid:af516d8d-c449-4a8b-bbb4-9e36489d474d" nodeRepresentation="394802001" id="urn:uuid:d249f9c3-2f03-485c-9c22-06cebf52119e">
+        <Slot name="codingScheme">
+         <ValueList>
+          <Value>2.16.840.1.113883.6.96</Value>
+         </ValueList>
+        </Slot>
+        <Name>
+         <LocalizedString charset="UTF-8" value="General medicine (qualifier value)"/>
+        </Name>
+       </Classification>
+       <Classification classificationScheme="urn:uuid:f0306f51-975f-434e-a61c-c59651d33983" classifiedObject="urn:uuid:af516d8d-c449-4a8b-bbb4-9e36489d474d" nodeRepresentation="41000179103" id="urn:uuid:25eb7a31-89d8-435b-824c-86435c34feac">
+        <Slot name="codingScheme">
+         <ValueList>
+          <Value>2.16.840.1.113883.6.96</Value>
+         </ValueList>
+        </Slot>
+        <Name>
+         <LocalizedString charset="UTF-8" value="Immunization Record (record artifact)"/>
+        </Name>
+       </Classification>
+       <Classification classificationScheme="urn:uuid:f4f85eac-e6cb-4883-b524-f2705394840f" classifiedObject="urn:uuid:af516d8d-c449-4a8b-bbb4-9e36489d474d" nodeRepresentation="17621005" id="urn:uuid:73c2ed0f-b3ce-4a32-9790-d7f9e26aceba">
+        <Slot name="codingScheme">
+         <ValueList>
+          <Value>2.16.840.1.113883.6.96</Value>
+         </ValueList>
+        </Slot>
+        <Name>
+         <LocalizedString xml:lang="en-US" charset="UTF-8" value="Normal"/>
+        </Name>
+       </Classification>
+       <ExternalIdentifier registryObject="urn:uuid:af516d8d-c449-4a8b-bbb4-9e36489d474d" identificationScheme="urn:uuid:58a6f841-87b3-4a3e-92fd-a8ffeff98427" value="CHPAM3946^^^&amp;1.3.6.1.4.1.12559.11.20.1&amp;ISO" id="urn:uuid:3dbba224-a981-47a9-9da5-6979d16bfe91">
+        <Name>
+         <LocalizedString value="XDSDocumentEntry.patientId"/>
+        </Name>
+       </ExternalIdentifier>
+       <ExternalIdentifier registryObject="urn:uuid:af516d8d-c449-4a8b-bbb4-9e36489d474d" identificationScheme="urn:uuid:2e82c1f6-a085-4c72-9da3-8640a32e42ab" value="2.25.267241352778226683619515102048382761723" id="urn:uuid:40e565f5-bd4b-4e8a-bb08-72d2257e8762">
+        <Name>
+         <LocalizedString value="XDSDocumentEntry.uniqueId"/>
+        </Name>
+       </ExternalIdentifier>
+      </ExtrinsicObject>
+
+      <RegistryPackage id="urn:uuid:a459a58b-1c47-4b43-b7db-82eb1b340168">
+       <Slot name="submissionTime">
+        <ValueList>
+         <Value>20231219102116</Value>
+        </ValueList>
+       </Slot>
+       <Classification classificationScheme="urn:uuid:a7058bb9-b4e4-4307-ba5b-e3f0ab85e12d" classifiedObject="urn:uuid:a459a58b-1c47-4b43-b7db-82eb1b340168" nodeRepresentation="" id="urn:uuid:6c2e8937-3650-4f7b-a98d-b1739c0798e1">
+        <Slot name="authorPerson">
+         <ValueList>
+          <Value>^Max^Mustermann^^^Dr.Med</Value>
+         </ValueList>
+        </Slot>
+        <Slot name="authorRole">
+         <ValueList>
+          <Value>HCP^^^&amp;2.16.756.5.30.1.127.3.10.6&amp;ISO</Value>
+         </ValueList>
+        </Slot>
+        <Slot name="authorSpecialty">
+         <ValueList>
+          <Value>1050^^^&amp;2.16.756.5.30.1.127.3.5&amp;ISO</Value>
+         </ValueList>
+        </Slot>
+       </Classification>
+       <Classification classificationScheme="urn:uuid:aa543740-bdda-424e-8c96-df4873be8500" classifiedObject="urn:uuid:a459a58b-1c47-4b43-b7db-82eb1b340168" nodeRepresentation="71388002" id="urn:uuid:3e3b7544-d7d8-498b-9bc1-6f16cce2ad38">
+        <Slot name="codingScheme">
+         <ValueList>
+          <Value>2.16.840.1.113883.6.96</Value>
+         </ValueList>
+        </Slot>
+        <Name>
+         <LocalizedString xml:lang="en-US" charset="UTF-8" value="Procedure (procedure)"/>
+        </Name>
+       </Classification>
+       <ExternalIdentifier registryObject="urn:uuid:a459a58b-1c47-4b43-b7db-82eb1b340168" identificationScheme="urn:uuid:6b5aea1a-874d-4603-a4bc-96a0a7b38446" value="CHPAM3946^^^&amp;1.3.6.1.4.1.12559.11.20.1&amp;ISO" id="urn:uuid:b155cad3-b415-47a7-854f-0d8a0a29cfd2">
+        <Name>
+         <LocalizedString value="XDSSubmissionSet.patientId"/>
+        </Name>
+       </ExternalIdentifier>
+       <ExternalIdentifier registryObject="urn:uuid:a459a58b-1c47-4b43-b7db-82eb1b340168" identificationScheme="urn:uuid:96fdda7c-d067-4183-912e-bf5ee74998a8" value="2.25.194301908197721326796925171598754063498" id="urn:uuid:b19fdbbd-f545-43e6-82c1-2b7b60560635">
+        <Name>
+         <LocalizedString value="XDSSubmissionSet.uniqueId"/>
+        </Name>
+       </ExternalIdentifier>
+       <ExternalIdentifier registryObject="urn:uuid:a459a58b-1c47-4b43-b7db-82eb1b340168" identificationScheme="urn:uuid:554ac39e-e3fe-47fe-b233-965d2a147832" value="2.16.756.5.30.1.139.1.1.11" id="urn:uuid:c85aeade-175b-47ac-803e-efe2d1556895">
+        <Name>
+         <LocalizedString value="XDSSubmissionSet.sourceId"/>
+        </Name>
+       </ExternalIdentifier>
+      </RegistryPackage>
+
+      <Classification classifiedObject="urn:uuid:a459a58b-1c47-4b43-b7db-82eb1b340168" classificationNode="urn:uuid:a54d6aa5-d40d-43f9-88c5-b4633d873bdd" id="urn:uuid:b855e4d0-4adb-44e4-9bd7-76f8ab15899c"/>
+
+      <Association associationType="urn:oasis:names:tc:ebxml-regrep:AssociationType:HasMember" sourceObject="urn:uuid:a459a58b-1c47-4b43-b7db-82eb1b340168" targetObject="urn:uuid:af516d8d-c449-4a8b-bbb4-9e36489d474d" id="urn:uuid:9aabf9f9-1a16-47d8-b280-281edd2fc3fc">
+       <Slot name="SubmissionSetStatus">
+        <ValueList>
+         <Value>Original</Value>
+        </ValueList>
+       </Slot>
+      </Association>
+
+     </RegistryObjectList>
+    </lcm:SubmitObjectsRequest>
+    <xds:Document id="urn:uuid:af516d8d-c449-4a8b-bbb4-9e36489d474d">
+     <xop:Include xmlns:xop="http://www.w3.org/2004/08/xop/include" href="cid:8ba22b9e-fcff-49d8-945e-438a11f25b0f-1@urn%3Aihe%3Aiti%3Axds-b%3A2007"/>
+    </xds:Document>
+   </xds:ProvideAndRegisterDocumentSetRequest>

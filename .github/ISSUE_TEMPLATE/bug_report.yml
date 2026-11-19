@@ -1,0 +1,53 @@
+name: Bug report
+description: Something does not work as the IHE ITI Technical Framework or the documentation says.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not attach messages or documents that contain patient data. Report vulnerabilities privately, as described in SECURITY.md.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: A minimal code sample, and a synthetic or public SOAP message if one is needed.
+    validations:
+      required: true
+  - type: input
+    id: reference
+    attributes:
+      label: IHE reference
+      description: The transaction and section of the IHE ITI Technical Framework that defines the expected behavior, if known.
+      placeholder: ITI TF-2 3.18.4.1.2.3.7.1
+  - type: input
+    id: partner
+    attributes:
+      label: Other actor
+      description: The registry, repository, or toolkit on the other side, if any (NIST XDS Toolkit, Gazelle, a product).
+  - type: input
+    id: revision
+    attributes:
+      label: SwiftXDS revision
+      placeholder: commit or tag
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      multiple: true
+      options: [macOS, iOS, Linux]
+    validations:
+      required: true
+  - type: input
+    id: swift
+    attributes:
+      label: Swift version
+      description: Output of `swift --version`.

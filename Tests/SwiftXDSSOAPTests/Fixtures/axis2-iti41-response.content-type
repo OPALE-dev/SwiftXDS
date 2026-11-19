@@ -1,0 +1,1 @@
+multipart/related; boundary=MIMEBoundary_urn_uuid_8BC3E3F9A6D1E2C4B5A61763548000001; type="application/xop+xml"; start="<0.urn:uuid:8BC3E3F9A6D1E2C4B5A61763548000002@apache.org>"; start-info="application/soap+xml"; action="urn:ihe:iti:2007:ProvideAndRegisterDocumentSet-bResponse"

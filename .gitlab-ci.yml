@@ -1,0 +1,22 @@
+stages:
+  - test
+
+default:
+  interruptible: true
+  timeout: 30m
+
+# Opale GitLab: Docker runner tagged `deploy` (Linux). macOS is checked locally before each MR.
+linux:
+  stage: test
+  image: swift:6.2-jammy
+  tags: [deploy]
+  script:
+    - swift --version
+    - swift build --build-tests -j 8
+    - mkdir -p .reports
+    - swift test --skip-build --parallel --num-workers 2 --xunit-output .reports/linux-tests.xml
+  artifacts:
+    when: always
+    expire_in: 30 days
+    reports:
+      junit: .reports/*.xml

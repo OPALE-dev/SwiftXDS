@@ -1,0 +1,7 @@
+.env
+.build/
+.swiftpm/
+*.xcodeproj
+Package.resolved
+.reports/
+.derived-data/

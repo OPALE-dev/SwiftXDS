@@ -1,0 +1,21 @@
+name: Feature request
+description: Propose an IHE transaction, an option, or an API improvement.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Need
+      description: What you want to do with SwiftXDS, and why the current API does not allow it.
+    validations:
+      required: true
+  - type: input
+    id: reference
+    attributes:
+      label: IHE reference
+      description: The profile, transaction, or option involved, if any.
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The API or behavior you have in mind, and the actor or toolkit it could be checked against.
