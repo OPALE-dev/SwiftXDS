@@ -55,6 +55,7 @@ change the API.
 | Replacement (RPLC) and ITI-57 status updates (Approved ↔ Deprecated) | Done |
 | ITI-57 metadata updates (new versions) | Planned |
 | Test registry and repository, HTTP test server (ITI-41 with RPLC, ITI-18, ITI-43, ITI-57 status updates) | Done |
+| Interoperability with the NIST XDS Toolkit 7.13.0 registry/repository simulator (ITI-41, ITI-18, ITI-43, RPLC, ITI-57) | Tested |
 
 ## Requirements
 
@@ -164,6 +165,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md):
 ```sh
 swift build --build-tests && swift test --skip-build
 ```
+
+`ExternalRegistryTests` runs the same path against a third-party registry, such as a
+[NIST XDS Toolkit](https://github.com/usnistgov/iheos-toolkit2) registry/repository simulator with
+the Update Metadata option, when two variables name it: `SWIFTXDS_EXTERNAL_SIMULATOR` (the simulator's
+base address, `…/xdstools/sim/<user>__<id>`) and `SWIFTXDS_EXTERNAL_PATIENT` (`id^^^&oid&ISO` of a patient
+fed to it). It uses the codes of the Toolkit's default environment. Otherwise it is skipped.
 
 The CI runs the tests on Linux (`swift:6.2-jammy`), macOS, and iOS. Report vulnerabilities as
 described in [SECURITY.md](SECURITY.md). Changes are listed in the [changelog](CHANGELOG.md).
