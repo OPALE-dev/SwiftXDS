@@ -44,6 +44,21 @@ public actor XDSTestRegistry {
 
     public func setKnownPatients(_ patients: Set<CXIdentifier>?) { knownPatients = patients }
 
+    /// Registers an On-Demand DocumentEntry, as a document source would with ITI-61, which the
+    /// registry does not simulate: the target of an `IsSnapshotOf`. Returns its `entryUUID`.
+    @discardableResult
+    public func registerOnDemand(_ entry: XDSDocumentEntry) -> String {
+        var d = entry
+        if !d.entryUUID.lowercased().hasPrefix("urn:uuid:") { d.entryUUID = XDSMetadata.newUUID() }
+        d.objectType = XDSScheme.documentEntryOnDemand
+        d.logicalID = d.entryUUID
+        d.version = "1"
+        d.availabilityStatus = .approved
+        d.homeCommunityId = homeCommunityId
+        documentEntries[d.entryUUID] = d
+        return d.entryUUID
+    }
+
     static let addressingHeaders = Set(["Action", "MessageID", "ReplyTo", "To", "RelatesTo", "FaultTo", "From"].map { XName(Namespace.addressing, $0) })
 
     /// Answers one SOAP request: a response, or a SOAP fault for addressing errors.
@@ -241,7 +256,9 @@ public actor XDSTestRegistry {
     }
 
     /// Document relationships (RPLC, XFRM, APND, XFRM_RPLC): the original is an Approved
-    /// DocumentEntry of the same patient. Status updates belong to ITI-57.
+    /// DocumentEntry of the same patient. A snapshot (`IsSnapshotOf`, On-Demand Documents option)
+    /// points to an Approved On-Demand DocumentEntry of the registry, of the same patient. Status
+    /// updates belong to ITI-57.
     func relationshipErrors(_ submission: XDSObjectList) -> [RegistryError] {
         var errors: [RegistryError] = []
         let replaced = Dictionary(grouping: submission.associations.filter { [.replace, .transformAndReplace].contains($0.type) }, by: \.target)
@@ -253,10 +270,13 @@ public actor XDSTestRegistry {
                 errors.append(RegistryError(XDSErrorCode.registryMetadataError, "UpdateAvailabilityStatus is sent with ITI-57, not ITI-41", location: a.id))
                 continue
             }
-            guard [.replace, .transform, .append, .transformAndReplace].contains(a.type), exists(a.target) else { continue }
+            guard [.replace, .transform, .append, .transformAndReplace, .isSnapshotOf].contains(a.type), exists(a.target) else { continue }
             guard let original = documentEntries[a.target] else {
                 errors.append(RegistryError(XDSErrorCode.registryMetadataError, "\(a.type) must point to a DocumentEntry", location: a.id))
                 continue
+            }
+            if a.type == .isSnapshotOf, original.objectType != XDSScheme.documentEntryOnDemand {
+                errors.append(RegistryError(XDSErrorCode.registryMetadataError, "IsSnapshotOf must point to an On-Demand DocumentEntry; \(a.target) is Stable", location: a.id))
             }
             if original.availabilityStatus != .approved {
                 errors.append(RegistryError(XDSErrorCode.registryDeprecatedDocumentError, "\(a.target) is not Approved: only the current version can be \(a.type == .replace ? "replaced" : "related to")", location: a.id))

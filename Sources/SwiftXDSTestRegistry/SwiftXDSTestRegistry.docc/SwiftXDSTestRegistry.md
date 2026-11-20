@@ -25,6 +25,11 @@ let found = try await client.findDocuments(patientId: patient, registry: server.
 the refusal of an unknown patient. `XDSTestServer.Limits` bounds the request
 size and the number of connections; `errors` lists what the server refused.
 
+ITI-61 (Register On-Demand Document Entry) is not simulated:
+`registerOnDemand(_:)` places an On-Demand entry in the registry, so that a
+snapshot (`IsSnapshotOf` in ITI-41) can point to it. The registry refuses a
+snapshot of an entry that is not On-Demand.
+
 The registry is strict: it applies the validation of a Document Repository
 and of the registry to what it receives. It is not a reference
 implementation, and passing tests against it proves no IHE conformance. It is

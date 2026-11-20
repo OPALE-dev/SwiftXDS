@@ -57,6 +57,33 @@ import SwiftXDSTestRegistry
         }
     }
 
+    /// Exit criterion of #231: a snapshot (IsSnapshotOf) must point to an On-Demand entry of the
+    /// registry; a Stable one is refused by the registry itself.
+    @Test func aSnapshotMustPointToAnOnDemandEntry() async throws {
+        try await withHarness { h in
+            let stable = try await publish(h)
+            var onDemand = manifestSubmission().documentEntries[0]
+            onDemand.entryUUID = "OnDemand01"
+            let target = await h.registry.registerOnDemand(onDemand)
+            #expect(await h.registry.documentEntries[target]?.objectType == XDSScheme.documentEntryOnDemand)
+
+            func snapshot(of target: String) -> XDSObjectList {
+                var s = manifestSubmission()
+                s.associations.append(XDSAssociation(type: .isSnapshotOf, source: "Document01", target: target))
+                return s
+            }
+            let refused = try await h.client.provideAndRegister(snapshot(of: stable.entryUUID), documents: [XDSDocument(entryUUID: "Document01", data: v2)], to: h.server.url)
+            #expect(!refused.isSuccess)
+            #expect(refused.errors.contains { $0.errorCode == XDSErrorCode.registryMetadataError && $0.codeContext.contains("On-Demand") })
+
+            let accepted = try await h.client.provideAndRegister(snapshot(of: target), documents: [XDSDocument(entryUUID: "Document01", data: v2)], to: h.server.url)
+            #expect(accepted.isSuccess, "\(accepted.errors)")
+            #expect(await h.registry.associations.values.contains { $0.type == .isSnapshotOf && $0.target == target })
+            // The On-Demand entry stays Approved: a snapshot does not replace it.
+            #expect(await h.registry.documentEntries[target]?.availabilityStatus == .approved)
+        }
+    }
+
     @Test func onlyTheApprovedVersionOfTheSamePatientCanBeReplaced() async throws {
         try await withHarness { h in
             let original = try await publish(h)
