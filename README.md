@@ -34,8 +34,8 @@ Not yet: metadata updates that create a new version of an object (ITI-57), XDR, 
 National profiles such as the French DMP are left to the application. Extension points let it add
 SOAP headers (security assertions), extra documents (signatures) and its own TLS configuration.
 
-SwiftXDS is developed by [OPALE](https://www.opale.fr) for its PACS, and is meant to be useful to
-any Swift healthcare application. It makes no claim of IHE conformance until it has been tested
+SwiftXDS is developed by [OPALE](https://www.opale.fr) for internal use, and is meant to be useful
+to any Swift healthcare application. It makes no claim of IHE conformance until it has been tested
 against third-party actors, such as the NIST XDS Toolkit or Gazelle. Before 1.0, minor versions may
 change the API.
 
