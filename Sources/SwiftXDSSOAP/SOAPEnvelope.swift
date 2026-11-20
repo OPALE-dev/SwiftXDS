@@ -8,6 +8,8 @@ public enum SOAPError: Error, Equatable, Sendable, CustomStringConvertible {
     case missingBody
     case missingHeader(XName)
     case invalidFault(String)
+    /// A `rawHeaders` fragment that is not one well-formed element: refused before sending.
+    case malformedRawHeader(index: Int, reason: String)
 
     public var description: String {
         switch self {
@@ -16,6 +18,7 @@ public enum SOAPError: Error, Equatable, Sendable, CustomStringConvertible {
         case .missingBody: "SOAP envelope without Body"
         case .missingHeader(let n): "missing SOAP header \(n)"
         case .invalidFault(let m): "invalid SOAP fault: \(m)"
+        case .malformedRawHeader(let i, let r): "raw header \(i) is not a well-formed element: \(r)"
         }
     }
 }
@@ -30,8 +33,13 @@ public struct SOAPEnvelope: Hashable, Sendable {
     /// Header blocks.
     public var headers: [XElement]
     /// Header blocks written verbatim after `headers`: well-formed fragments with their own
-    /// namespace declarations, never rewritten (exclusive canonicalisation stays valid).
+    /// namespace declarations, never rewritten (exclusive canonicalisation stays valid). Each one
+    /// is checked before sending (`data()`): a fragment that is not one element is refused.
     public var rawHeaders: [String]
+    /// Received envelopes read with `keepingHeaderBytes`: the original bytes of each header block,
+    /// in the order of `headers`, as they arrived (for example to verify a signed assertion).
+    /// Namespace declarations made on `Envelope` or `Header` are not part of these bytes.
+    public var receivedHeaderBytes: [Data] = []
     public var body: [XElement]
     /// Attributes of `Header` and `Body`, such as `wsu:Id` referenced by a signature.
     public var headerAttributes: [XAttribute]
@@ -85,11 +93,84 @@ public struct SOAPEnvelope: Hashable, Sendable {
     }
 
     public func data() throws -> Data {
-        try XMLWriter.data(element)
+        for (index, raw) in rawHeaders.enumerated() {
+            do { _ = try XMLReader.parse(raw) } catch {
+                throw SOAPError.malformedRawHeader(index: index, reason: String(describing: error))
+            }
+        }
+        return try XMLWriter.data(element)
     }
 
-    public init(data: Data, limits: XMLReader.Limits = .default) throws {
+    /// Reads an envelope; with `keepingHeaderBytes`, also keeps the original bytes of each header
+    /// block (`receivedHeaderBytes`).
+    public init(data: Data, limits: XMLReader.Limits = .default, keepingHeaderBytes: Bool = false) throws {
         try self.init(element: XMLReader.parse(data, limits: limits))
+        if keepingHeaderBytes {
+            let bytes = [UInt8](data)
+            if let ranges = Self.headerBlockRanges(bytes), ranges.count == headers.count {
+                receivedHeaderBytes = ranges.map { Data(bytes[$0]) }
+            }
+        }
+    }
+
+    /// Byte ranges of the children of `Header` in a document the XML reader already accepted;
+    /// empty without a header, nil if the bytes cannot be followed.
+    static func headerBlockRanges(_ b: [UInt8]) -> [Range<Int>]? {
+        func find(_ pattern: String, from: Int) -> Int? {
+            let p = Array(pattern.utf8)
+            guard from <= b.count - p.count else { return nil }
+            var i = from
+            while i <= b.count - p.count {
+                if b[i] == p[0], Array(b[i..<(i + p.count)]) == p { return i }
+                i += 1
+            }
+            return nil
+        }
+        func starts(_ prefix: String, at i: Int) -> Bool {
+            let p = Array(prefix.utf8)
+            return i + p.count <= b.count && Array(b[i..<(i + p.count)]) == p
+        }
+        var i = 0, depth = 0, inHeader = false, start = 0
+        var out: [Range<Int>] = []
+        while i < b.count {
+            guard b[i] == UInt8(ascii: "<") else { i += 1; continue }
+            if starts("<!--", at: i) { guard let e = find("-->", from: i + 4) else { return nil }; i = e + 3; continue }
+            if starts("<![CDATA[", at: i) { guard let e = find("]]>", from: i + 9) else { return nil }; i = e + 3; continue }
+            if starts("<?", at: i) { guard let e = find("?>", from: i + 2) else { return nil }; i = e + 2; continue }
+            if starts("<!", at: i) { return nil }
+            var j = i + 1
+            var quote: UInt8?
+            while j < b.count {
+                let c = b[j]
+                if let q = quote { if c == q { quote = nil } }
+                else if c == UInt8(ascii: "\"") || c == UInt8(ascii: "'") { quote = c }
+                else if c == UInt8(ascii: ">") { break }
+                j += 1
+            }
+            guard j < b.count else { return nil }
+            let end = j + 1
+            if b[i + 1] == UInt8(ascii: "/") {
+                if inHeader, depth == 3 { out.append(start..<end) }
+                if inHeader, depth == 2 { return out }
+                depth -= 1
+            } else {
+                let empty = b[j - 1] == UInt8(ascii: "/")
+                depth += 1
+                if depth == 2 {
+                    var k = i + 1
+                    while k < j, ![UInt8(ascii: " "), UInt8(ascii: "\t"), UInt8(ascii: "\n"), UInt8(ascii: "\r"), UInt8(ascii: "/")].contains(b[k]) { k += 1 }
+                    let name = String(decoding: b[(i + 1)..<k], as: UTF8.self)
+                    guard (name.split(separator: ":").last.map(String.init) ?? name) == "Header", !empty else { return [] }
+                    inHeader = true
+                } else if depth == 3, inHeader {
+                    start = i
+                    if empty { out.append(i..<end) }
+                }
+                if empty { depth -= 1 }
+            }
+            i = end
+        }
+        return nil
     }
 }
 

@@ -245,6 +245,8 @@ final class HandleBox: @unchecked Sendable {
 public struct MTOMReader: Sendable {
     public var limits: MultipartLimits
     public var xmlLimits: XMLReader.Limits
+    /// Keeps the original bytes of each received header block (`SOAPEnvelope.receivedHeaderBytes`).
+    public var keepsHeaderBytes = false
 
     public init(limits: MultipartLimits = .default, xmlLimits: XMLReader.Limits = .default) {
         self.limits = limits
@@ -277,7 +279,7 @@ public struct MTOMReader: Sendable {
                 data.append(chunk)
                 guard data.count <= xmlLimits.maxBytes else { throw XMLError.tooLarge(limit: xmlLimits.maxBytes) }
             }
-            return SOAPMessage(envelope: try SOAPEnvelope(data: data, limits: xmlLimits))
+            return SOAPMessage(envelope: try SOAPEnvelope(data: data, limits: xmlLimits, keepingHeaderBytes: keepsHeaderBytes))
         case "multipart/related":
             break
         default:
@@ -340,7 +342,7 @@ public struct MTOMReader: Sendable {
             }
             try parser.finish()
             guard let root, rootHeaders != nil else { throw MTOMError.missingRootPart }
-            let envelope = try SOAPEnvelope(data: root, limits: xmlLimits)
+            let envelope = try SOAPEnvelope(data: root, limits: xmlLimits, keepingHeaderBytes: keepsHeaderBytes)
             let message = SOAPMessage(envelope: envelope, attachments: attachments)
             for include in envelope.element.descendants(named: XOP.includeName) {
                 guard let id = include.attribute("href").flatMap(XOP.contentID(href:)) else {
