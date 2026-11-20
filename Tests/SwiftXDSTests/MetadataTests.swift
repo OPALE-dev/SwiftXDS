@@ -61,6 +61,69 @@ private func objectList() throws -> XDSObjectList {
         #expect(again == list)
     }
 
+    static let unknownScheme = "urn:uuid:5e1f1c1a-0000-4000-8000-0000000000aa"
+
+    static func unknownClassification(of object: String) -> XElement {
+        XElement(RIM.classification, attributes: [
+            XAttribute(XName("classificationScheme"), unknownScheme), XAttribute(XName("classifiedObject"), object),
+            XAttribute(XName("id"), "urn:uuid:5e1f1c1a-0000-4000-8000-0000000000ab"), XAttribute(XName("nodeRepresentation"), "X1"),
+            XAttribute(XName("objectType"), XDSScheme.classificationType),
+        ], elements: [
+            XElement(RIM.slot, attributes: [XAttribute(XName("name"), "codingScheme")],
+                     elements: [XElement(RIM.valueList, elements: [XElement(RIM.value, text: "1.2.250.1.999.9")])]),
+        ])
+    }
+
+    static func unknownIdentifier(of object: String) -> XElement {
+        XElement(RIM.externalIdentifier, attributes: [
+            XAttribute(XName("id"), "urn:uuid:5e1f1c1a-0000-4000-8000-0000000000ac"),
+            XAttribute(XName("identificationScheme"), "urn:uuid:5e1f1c1a-0000-4000-8000-0000000000ad"),
+            XAttribute(XName("objectType"), XDSScheme.externalIdentifierType), XAttribute(XName("registryObject"), object),
+            XAttribute(XName("value"), "EXT-0042"),
+        ], elements: [XElement(RIM.nameElement, elements: [XElement(RIM.localizedString, attributes: [XAttribute(XName("value"), "national.id")])])])
+    }
+
+    /// Exit criterion of #231: a classification and an external identifier of unknown schemes are
+    /// read, then written back identically, in the ebRIM order.
+    @Test func unknownClassificationsAndIdentifiersAreRewrittenIdentically() throws {
+        let known = try objectList().documentEntries[0]
+        var e = known.element
+        let lastClassification = try #require(e.children.lastIndex { if case .element(let c) = $0 { c.name == RIM.classification } else { false } })
+        e.children.insert(.element(Self.unknownClassification(of: known.entryUUID)), at: lastClassification + 1)
+        e.children.append(.element(Self.unknownIdentifier(of: known.entryUUID)))
+        let original = try XMLReader.parse(XMLWriter.data(e))
+
+        let d = try XDSDocumentEntry(element: original)
+        #expect(d.extraClassifications.map { $0.attribute("nodeRepresentation") } == ["X1"])
+        #expect(d.extraIdentifiers.map { $0.attribute("value") } == ["EXT-0042"])
+        #expect(d.componentIDs == known.componentIDs)
+        #expect(d.classCode == known.classCode && d.uniqueId == known.uniqueId)
+        let a = Canonical.form(original), b = Canonical.form(try XMLReader.parse(XMLWriter.data(d.element)))
+        #expect(a == b, "\(Canonical.firstDifference(a, b) ?? "")")
+    }
+
+    /// Placed next to the object, or with an unknown node, they are kept too, and follow the object
+    /// when the registry gives it a UUID.
+    @Test func unknownComponentsFollowTheObject() throws {
+        var list = try objectList().registryObjectList
+        var node = Self.unknownClassification(of: "SubmissionSet01")
+        node.attributes = [XAttribute(XName("classificationNode"), "urn:uuid:5e1f1c1a-0000-4000-8000-0000000000ae"),
+                           XAttribute(XName("classifiedObject"), "SubmissionSet01"), XAttribute(XName("id"), "SubmissionSetNode"),
+                           XAttribute(XName("objectType"), XDSScheme.classificationType)]
+        node.children = []
+        list.children += [.element(node), .element(Self.unknownIdentifier(of: "SubmissionSet01"))]
+        var set = try #require(try XDSObjectList(registryObjectList: list).submissionSets.first)
+        #expect(set.extraClassifications.map { $0.attribute("id") } == ["SubmissionSetNode"])
+        #expect(set.extraIdentifiers.count == 1)
+        #expect(set.uniqueId == "1.2.250.1.999.4.20261119.1")
+
+        set.entryUUID = "urn:uuid:5e1f1c1a-0000-4000-8000-0000000000af"
+        let written = set.element
+        #expect(written.elements(named: RIM.classification).last?.attribute("classifiedObject") == set.entryUUID)
+        #expect(written.elements(named: RIM.externalIdentifier).last?.attribute("registryObject") == set.entryUUID)
+        #expect(try XDSSubmissionSet(element: XMLReader.parse(XMLWriter.data(written))) == set)
+    }
+
     @Test func writtenDocumentFollowsTheEbRIMOrder() throws {
         let e = try objectList().documentEntries[0].element
         let kinds = e.elements.map(\.name.local)

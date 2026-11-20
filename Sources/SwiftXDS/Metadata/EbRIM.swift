@@ -19,9 +19,9 @@ public enum XDSMetadataError: Error, Hashable, Sendable, CustomStringConvertible
 
 /// Encoding of XDS metadata as ebRIM 3.0 (ITI TF-3 §4.2.3), and back.
 ///
-/// Slots the model does not know are kept in `extraSlots`; classifications and external
-/// identifiers of unknown schemes are not kept. The IDs of the classifications and external
-/// identifiers that are kept are (`XDSComponentIDs`).
+/// What the model does not know is kept: slots in `extraSlots`, classifications and external
+/// identifiers of unknown schemes in `extraClassifications` and `extraIdentifiers`, as read. The
+/// IDs of the known classifications and external identifiers are kept too (`XDSComponentIDs`).
 enum RIM {
     static func name(_ local: String) -> XName { XName(Namespace.rim, local) }
     static let slot = name("Slot"), valueList = name("ValueList"), value = name("Value")
@@ -130,6 +130,20 @@ enum RIM {
             ])
         }
 
+        /// Classifications or external identifiers kept as read, attached to this object by
+        /// `attribute` (`classifiedObject`, `registryObject`), in the alphabetical place of the
+        /// attributes SwiftXDS writes.
+        func kept(_ elements: [XElement], attachedBy attribute: String) -> [XElement] {
+            let name = XName(attribute)
+            return elements.map { e in
+                var e = e
+                e.attributes.removeAll { $0.name == name }
+                let at = e.attributes.firstIndex { $0.name.namespace == nil && $0.name.local > attribute } ?? e.attributes.endIndex
+                e.attributes.insert(XAttribute(name, object), at: at)
+                return e
+            }
+        }
+
         func identifier(_ value: String, scheme: String, label: String) -> XElement {
             XElement(externalIdentifier, attributes: [
                 XAttribute(XName("id"), id(scheme)), XAttribute(XName("identificationScheme"), scheme),
@@ -179,6 +193,30 @@ enum RIM {
                 default: break
                 }
             }
+        }
+
+        /// Removes and returns the classifications and external identifiers the object type does
+        /// not know: `schemes` and `nodes` are its classification schemes and nodes, `identifiers`
+        /// its identification schemes.
+        mutating func setAside(schemes: Set<String>, nodes: Set<String>, identifiers: Set<String>) -> (classifications: [XElement], identifiers: [XElement]) {
+            func known(_ c: XElement) -> Bool {
+                if let node = RIM.normalized(c.attribute("classificationNode")) { return nodes.contains(node) }
+                return scheme(c).map(schemes.contains) ?? false
+            }
+            func knownIdentifier(_ e: XElement) -> Bool {
+                RIM.normalized(e.attribute("identificationScheme")).map(identifiers.contains) ?? false
+            }
+            // Detached from the object: its ID may change (a registry replaces a symbolic ID).
+            func detached(_ e: XElement, _ attribute: String) -> XElement {
+                var e = e
+                e.attributes.removeAll { $0.name == XName(attribute) }
+                return e
+            }
+            let unknown = (classifications.filter { !known($0) }.map { detached($0, "classifiedObject") },
+                           identifierElements.filter { !knownIdentifier($0) }.map { detached($0, "registryObject") })
+            let kept = (classifications.filter(known), identifierElements.filter(knownIdentifier))
+            (classifications, identifierElements) = kept
+            return unknown
         }
 
         func single(_ name: String) -> String? { slots[name]?.first }
@@ -256,6 +294,11 @@ extension XDSDocumentEntry {
     static let knownSlots: Set<String> = ["creationTime", "hash", "languageCode", "legalAuthenticator", "referenceIdList",
                                           "repositoryUniqueId", "serviceStartTime", "serviceStopTime", "size",
                                           "sourcePatientId", "sourcePatientInfo", "URI", "documentAvailability"]
+    static let knownSchemes: Set<String> = [
+        XDSScheme.documentEntryAuthor, XDSScheme.documentEntryClassCode, XDSScheme.documentEntryConfidentialityCode,
+        XDSScheme.documentEntryEventCodeList, XDSScheme.documentEntryFormatCode, XDSScheme.documentEntryHealthcareFacilityTypeCode,
+        XDSScheme.documentEntryPracticeSettingCode, XDSScheme.documentEntryTypeCode,
+    ]
 
     public var element: XElement {
         var w = RIM.Writer(object: entryUUID, ids: componentIDs)
@@ -269,11 +312,13 @@ extension XDSDocumentEntry {
         add(practiceSettingCode, XDSScheme.documentEntryPracticeSettingCode)
         add(typeCode, XDSScheme.documentEntryTypeCode)
         if limitedMetadata { classifications.append(w.node(XDSScheme.documentEntryLimitedMetadata)) }
+        classifications += w.kept(extraClassifications, attachedBy: "classifiedObject")
         var identifiers: [XElement] = []
         if let patientId {
             identifiers.append(w.identifier(patientId.description, scheme: XDSScheme.documentEntryPatientId, label: "XDSDocumentEntry.patientId"))
         }
         identifiers.append(w.identifier(uniqueId, scheme: XDSScheme.documentEntryUniqueId, label: "XDSDocumentEntry.uniqueId"))
+        identifiers += w.kept(extraIdentifiers, attachedBy: "registryObject")
         let one = { (s: String?) in s.map { [$0] } ?? [] }
         return RIM.object(RIM.extrinsicObject, attributes: [
             RIM.attr("home", homeCommunityId), RIM.attr("id", entryUUID), RIM.attr("lid", logicalID), RIM.attr("mimeType", mimeType),
@@ -293,7 +338,9 @@ extension XDSDocumentEntry {
     /// Reads an `ExtrinsicObject`; a value that is present but invalid (patient ID, date, status…)
     /// is an error, so that it is neither lost nor reported as missing.
     public init(element e: XElement, siblings: [XElement] = []) throws {
-        let p = try RIM.Parsed(e, siblings: siblings)
+        var p = try RIM.Parsed(e, siblings: siblings)
+        let unknown = p.setAside(schemes: Self.knownSchemes, nodes: [XDSScheme.documentEntryLimitedMetadata],
+                                 identifiers: [XDSScheme.documentEntryPatientId, XDSScheme.documentEntryUniqueId])
         self.init(entryUUID: p.object, uniqueId: p.identifier(XDSScheme.documentEntryUniqueId) ?? "",
                   patientId: try RIM.typed(p.identifier(XDSScheme.documentEntryPatientId), "patientId", CXIdentifier.init),
                   mimeType: e.attribute("mimeType") ?? "",
@@ -327,6 +374,8 @@ extension XDSDocumentEntry {
         typeCode = p.codes(XDSScheme.documentEntryTypeCode).first
         limitedMetadata = p.hasNode(XDSScheme.documentEntryLimitedMetadata)
         extraSlots = p.extra(excluding: Self.knownSlots)
+        extraClassifications = unknown.classifications
+        extraIdentifiers = unknown.identifiers
         componentIDs = p.componentIDs
     }
 }
@@ -340,6 +389,7 @@ extension XDSSubmissionSet {
         if let contentTypeCode { classifications.append(w.code(contentTypeCode, scheme: XDSScheme.submissionSetContentTypeCode)) }
         classifications.append(w.node(XDSScheme.submissionSet))
         if limitedMetadata { classifications.append(w.node(XDSScheme.submissionSetLimitedMetadata)) }
+        classifications += w.kept(extraClassifications, attachedBy: "classifiedObject")
         var identifiers = [
             w.identifier(uniqueId, scheme: XDSScheme.submissionSetUniqueId, label: "XDSSubmissionSet.uniqueId"),
             w.identifier(sourceId, scheme: XDSScheme.submissionSetSourceId, label: "XDSSubmissionSet.sourceId"),
@@ -347,6 +397,7 @@ extension XDSSubmissionSet {
         if let patientId {
             identifiers.append(w.identifier(patientId.description, scheme: XDSScheme.submissionSetPatientId, label: "XDSSubmissionSet.patientId"))
         }
+        identifiers += w.kept(extraIdentifiers, attachedBy: "registryObject")
         return RIM.object(RIM.registryPackage, attributes: [
             RIM.attr("home", homeCommunityId), RIM.attr("id", entryUUID), RIM.attr("lid", logicalID),
             RIM.attr("objectType", XDSScheme.registryPackageType), RIM.attr("status", availabilityStatus?.rawValue),
@@ -357,7 +408,10 @@ extension XDSSubmissionSet {
     }
 
     public init(element e: XElement, siblings: [XElement] = []) throws {
-        let p = try RIM.Parsed(e, siblings: siblings)
+        var p = try RIM.Parsed(e, siblings: siblings)
+        let unknown = p.setAside(schemes: [XDSScheme.submissionSetAuthor, XDSScheme.submissionSetContentTypeCode],
+                                 nodes: [XDSScheme.submissionSet, XDSScheme.submissionSetLimitedMetadata],
+                                 identifiers: [XDSScheme.submissionSetUniqueId, XDSScheme.submissionSetSourceId, XDSScheme.submissionSetPatientId])
         self.init(entryUUID: p.object, uniqueId: p.identifier(XDSScheme.submissionSetUniqueId) ?? "",
                   sourceId: p.identifier(XDSScheme.submissionSetSourceId) ?? "",
                   patientId: try RIM.typed(p.identifier(XDSScheme.submissionSetPatientId), "patientId", CXIdentifier.init),
@@ -373,6 +427,8 @@ extension XDSSubmissionSet {
         availabilityStatus = try RIM.typed(e.attribute("status"), "status", XDSAvailabilityStatus.init(rawValue:))
         limitedMetadata = p.hasNode(XDSScheme.submissionSetLimitedMetadata)
         extraSlots = p.extra(excluding: Self.knownSlots)
+        extraClassifications = unknown.classifications
+        extraIdentifiers = unknown.identifiers
         componentIDs = p.componentIDs
     }
 }
@@ -385,10 +441,12 @@ extension XDSFolder {
         var classifications = codeList.map { w.code($0, scheme: XDSScheme.folderCodeList) }
         classifications.append(w.node(XDSScheme.folder))
         if limitedMetadata { classifications.append(w.node(XDSScheme.folderLimitedMetadata)) }
+        classifications += w.kept(extraClassifications, attachedBy: "classifiedObject")
         var identifiers = [w.identifier(uniqueId, scheme: XDSScheme.folderUniqueId, label: "XDSFolder.uniqueId")]
         if let patientId {
             identifiers.append(w.identifier(patientId.description, scheme: XDSScheme.folderPatientId, label: "XDSFolder.patientId"))
         }
+        identifiers += w.kept(extraIdentifiers, attachedBy: "registryObject")
         return RIM.object(RIM.registryPackage, attributes: [
             RIM.attr("home", homeCommunityId), RIM.attr("id", entryUUID), RIM.attr("lid", logicalID),
             RIM.attr("objectType", XDSScheme.registryPackageType), RIM.attr("status", availabilityStatus?.rawValue),
@@ -397,7 +455,9 @@ extension XDSFolder {
     }
 
     public init(element e: XElement, siblings: [XElement] = []) throws {
-        let p = try RIM.Parsed(e, siblings: siblings)
+        var p = try RIM.Parsed(e, siblings: siblings)
+        let unknown = p.setAside(schemes: [XDSScheme.folderCodeList], nodes: [XDSScheme.folder, XDSScheme.folderLimitedMetadata],
+                                 identifiers: [XDSScheme.folderUniqueId, XDSScheme.folderPatientId])
         self.init(entryUUID: p.object, uniqueId: p.identifier(XDSScheme.folderUniqueId) ?? "",
                   patientId: try RIM.typed(p.identifier(XDSScheme.folderPatientId), "patientId", CXIdentifier.init),
                   codeList: p.codes(XDSScheme.folderCodeList), title: nil)
@@ -410,6 +470,8 @@ extension XDSFolder {
         availabilityStatus = try RIM.typed(e.attribute("status"), "status", XDSAvailabilityStatus.init(rawValue:))
         limitedMetadata = p.hasNode(XDSScheme.folderLimitedMetadata)
         extraSlots = p.extra(excluding: Self.knownSlots)
+        extraClassifications = unknown.classifications
+        extraIdentifiers = unknown.identifiers
         componentIDs = p.componentIDs
     }
 }

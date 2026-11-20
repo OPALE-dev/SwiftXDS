@@ -147,6 +147,11 @@ public struct XDSDocumentEntry: Hashable, Sendable {
     public var limitedMetadata: Bool
     /// Slots this model does not interpret, kept on output (national extensions).
     public var extraSlots: [XDSSlot]
+    /// Classifications and external identifiers of schemes this model does not know (national
+    /// extensions), kept as read but for their `classifiedObject` or `registryObject`, and written
+    /// back after the known ones, attached to the object's current ID.
+    public var extraClassifications: [XElement] = []
+    public var extraIdentifiers: [XElement] = []
     public var componentIDs: XDSComponentIDs
 
     public init(entryUUID: String, uniqueId: String, patientId: CXIdentifier?, mimeType: String,
@@ -191,6 +196,11 @@ public struct XDSSubmissionSet: Hashable, Sendable {
     public var version: String?
     public var limitedMetadata: Bool
     public var extraSlots: [XDSSlot]
+    /// Classifications and external identifiers of schemes this model does not know (national
+    /// extensions), kept as read but for their `classifiedObject` or `registryObject`, and written
+    /// back after the known ones, attached to the object's current ID.
+    public var extraClassifications: [XElement] = []
+    public var extraIdentifiers: [XElement] = []
     public var componentIDs: XDSComponentIDs
 
     /// `submissionTime` is set by `XDSObjectList.submission` when left out.
@@ -230,6 +240,11 @@ public struct XDSFolder: Hashable, Sendable {
     public var version: String?
     public var limitedMetadata: Bool
     public var extraSlots: [XDSSlot]
+    /// Classifications and external identifiers of schemes this model does not know (national
+    /// extensions), kept as read but for their `classifiedObject` or `registryObject`, and written
+    /// back after the known ones, attached to the object's current ID.
+    public var extraClassifications: [XElement] = []
+    public var extraIdentifiers: [XElement] = []
     public var componentIDs: XDSComponentIDs
 
     public init(entryUUID: String, uniqueId: String, patientId: CXIdentifier?, codeList: [XDSCode], title: String?) {

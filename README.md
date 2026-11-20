@@ -21,7 +21,9 @@ documents in an XDS.b affinity domain:
   writer, with no dependency beyond Foundation;
 - the **XDS metadata model** (DocumentEntry, SubmissionSet, Folder, associations, codes, authors,
   CX/XCN/XON values), read from and written to **ebRIM 3.0**, with `RegistryResponse` and
-  validation of what a Document Source or a Document Repository must provide;
+  validation of what a Document Source or a Document Repository must provide; slots,
+  classifications and external identifiers the model does not know (national extensions) are
+  kept and written back;
 - the **Document Source** (ITI-41 Provide and Register Document Set-b) and **Document Consumer**
   (ITI-18 Registry Stored Query, ITI-43 Retrieve Document Set) transactions over HTTP, with
   documents streamed in both directions;
